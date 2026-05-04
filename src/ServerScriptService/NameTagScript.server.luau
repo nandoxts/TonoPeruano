@@ -79,16 +79,16 @@ local conejita = {
 }
 
 local roles = {
-	{list = dj, text = "🎧DJ🎧", color = "rainbow"},
-	{list = admins, text = "🚨ADMINISTRADOR🚨", color = Color3.fromRGB(255, 0, 0)},
-	{list = mods, text = "🔰MODERADOR🔰", color = Color3.fromRGB(38, 255, 0)},
-	{list = contributors, text = "COLABORADOR", color = Color3.fromRGB(255, 140, 0)},
-	{list = influencers, text = "⭐INFLUENCER⭐", color = Color3.fromRGB(0, 213, 255)},
-	{list = topDonors, text = "💸TOP DONADOR💸", color = Color3.fromRGB(17, 255, 0)},
-	{list = creators, text = "👑CREADOR👑", color = Color3.fromRGB(255, 255, 0)},
-	{list = HELPERS, text = "🛠️HELPERS🛠️", color = Color3.fromRGB(0, 123, 255)},
-	{list = dibujito, text = "🤡DIBUJITO🤡", color = Color3.fromRGB(255, 0, 123)},
-	{list = conejita, text = "🐰CONEJITA🐰", color = Color3.fromRGB(255, 179, 202)},
+	{list = dj,           text = "DJ",            color = "rainbow"},
+	{list = admins,       text = "ADMINISTRADOR",  color = Color3.fromRGB(255, 0, 0)},
+	{list = mods,         text = "MODERADOR",      color = Color3.fromRGB(38, 255, 0)},
+	{list = contributors, text = "COLABORADOR",    color = Color3.fromRGB(255, 140, 0)},
+	{list = influencers,  text = "INFLUENCER",     color = Color3.fromRGB(0, 213, 255)},
+	{list = topDonors,    text = "TOP DONADOR",    color = Color3.fromRGB(17, 255, 0)},
+	{list = creators,     text = "CREADOR",        color = Color3.fromRGB(255, 255, 0)},
+	{list = HELPERS,      text = "HELPER",         color = Color3.fromRGB(0, 123, 255)},
+	{list = dibujito,     text = "DIBUJITO",       color = Color3.fromRGB(255, 0, 123)},
+	{list = conejita,     text = "CONEJITA",       color = Color3.fromRGB(255, 179, 202)},
 }
 
 local function getDayCountSinceEpoch()
@@ -150,46 +150,63 @@ local function assignRole(player, label)
 			return
 		end
 	end
-	label.Text = "INVITADO"
+	label.Text = "Invitado"
 	label.TextColor3 = Color3.fromRGB(200, 200, 200)
+end
+
+local function onCharacterAdded(player, char)
+	local head = char:WaitForChild("Head")
+	local newTag = nametag:Clone()
+	local nameLabel = newTag:WaitForChild("Name")
+	local roleLabel = newTag:WaitForChild("Rol")
+	local vipLabel = newTag:WaitForChild("VIP")
+	local humanoid = char:WaitForChild("Humanoid")
+
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	newTag.Parent = head
+	newTag.Adornee = head
+
+	task.spawn(function()
+		local streak = updateStreak(player)
+		local streakText = tostring(streak) .. " dias "
+
+		if table.find(starUsers, player.Name) then
+			nameLabel.Text = streakText .. player.DisplayName .. " *"
+		else
+			nameLabel.Text = streakText .. player.DisplayName
+		end
+	end)
+
+	assignRole(player, roleLabel)
+
+	task.spawn(function()
+		local success, hasPass = pcall(function()
+			return MarketplaceService:UserOwnsGamePassAsync(player.UserId, VIP_GAMEPASS_ID)
+		end)
+		if success and hasPass then
+			vipLabel.Text = "[VIP]"
+			vipLabel.TextColor3 = Color3.fromRGB(226, 196, 0)
+			vipLabel.BackgroundTransparency = 1
+			vipLabel.TextScaled = true
+		end
+	end)
 end
 
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(char)
-		local head = char:WaitForChild("Head")
-		local newTag = nametag:Clone()
-		local nameLabel = newTag:WaitForChild("Name")
-		local roleLabel = newTag:WaitForChild("Rol")
-		local vipLabel = newTag:WaitForChild("VIP")
-		local humanoid = char:WaitForChild("Humanoid")
-
-		humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-		newTag.Parent = head
-		newTag.Adornee = head
-
-		task.spawn(function()
-			local streak = updateStreak(player)
-			local streakText = tostring(streak) .. "🔥 "
-
-			if table.find(starUsers, player.Name) then
-				nameLabel.Text = streakText .. player.DisplayName .. ""
-			else
-				nameLabel.Text = streakText .. player.DisplayName
-			end
-		end)
-
-		assignRole(player, roleLabel)
-
-		task.spawn(function()
-			local success, hasPass = pcall(function()
-				return MarketplaceService:UserOwnsGamePassAsync(player.UserId, VIP_GAMEPASS_ID)
-			end)
-			if success and hasPass then
-				vipLabel.Text = "[VIP]"
-				vipLabel.TextColor3 = Color3.fromRGB(226, 196, 0)
-				vipLabel.BackgroundTransparency = 1
-				vipLabel.TextScaled = true
-			end
-		end)
+		onCharacterAdded(player, char)
 	end)
+	if player.Character then
+		onCharacterAdded(player, player.Character)
+	end
 end)
+
+-- Maneja jugadores ya en el servidor cuando cargó el script
+for _, player in ipairs(Players:GetPlayers()) do
+	player.CharacterAdded:Connect(function(char)
+		onCharacterAdded(player, char)
+	end)
+	if player.Character then
+		onCharacterAdded(player, player.Character)
+	end
+end

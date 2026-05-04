@@ -37,6 +37,22 @@ local comandos = {
 				humanoid:ApplyDescription(desc)
 			end
 		end,
+		["/glow"] = function(player)
+			local char = player.Character
+			if not char then return end
+			local existing = char:FindFirstChild("GlowHighlight")
+			if existing then
+				existing:Destroy()
+			else
+				local highlight = Instance.new("Highlight")
+				highlight.Name = "GlowHighlight"
+				highlight.FillColor = Color3.fromRGB(255, 215, 0)
+				highlight.OutlineColor = Color3.fromRGB(255, 215, 0)
+				highlight.FillTransparency = 0.5
+				highlight.OutlineTransparency = 0
+				highlight.Parent = char
+			end
+		end,
 	}
 }
 
