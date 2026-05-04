@@ -169,43 +169,32 @@ local descs = {};			--// Contains settings descriptions
 	NOTE: Changing the level of built in ranks (Moderators, Admins, HeadAdmins, Creators)
 				will also change the permission level for any built-in commands associated with that rank. 																																				-			-]]
 
+	-- Carga roles desde el modulo central
+	local _ok, _Cfg = pcall(function()
+		return require(game:GetService("ReplicatedStorage"):WaitForChild("RolesConfig", 10))
+	end)
+
 	settings.Ranks = {
 		["+Comandos"] = {
-		Level = 50;
-		Users = {
-			"GamePass:1133764521" ; "Macr0xzzz" ; "NagatoK20";"AngeloGarciia01" ; "rose_luanaUwU"
-			};
+			Level = 50;
+			Users = { "GamePass:1133764521"; "NagatoK20"; "AngeloGarciia01"; "rose_luanaUwU" };
 		};
-		
-		--- 1133764521
-	
 		["Moderators"] = {
 			Level = 100;
-		    Users = {
-				--// Add users here
-			};
+			Users = _ok and _Cfg:GetAdonisUsers("Moderators") or {};
 		};
-
 		["Admins"] = {
 			Level = 200;
-			Users = {
-				--// Add users here
-			};
+			Users = _ok and _Cfg:GetAdonisUsers("Admins") or {};
 		};
-
 		["HeadAdmins"] = {
 			Level = 300;
-		Users = {"marcosyuik12"
-				--// Add users here
-			};
+			Users = _ok and _Cfg:GetAdonisUsers("HeadAdmins") or {};
 		};
-	
 		["Creators"] = {
-			Level = 900; --// Anything 900 or higher will be considered a creator and will bypass all perms & be allowed to edit settings in-game.
-		Users = {"xlm_brem" ; "AngeloGarciia"; "VALLEIDS"
-				--// Add users here (Also, don't forget quotations and all that)
-			};
-		}; 
+			Level = 900;
+			Users = _ok and _Cfg:GetAdonisUsers("Creators") or {};
+		};
 	};
 
 	--// Use the below table to set command permissions; Commented commands are included for example purposes

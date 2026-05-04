@@ -1,8 +1,9 @@
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
+local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("RolesConfig"))
 
 local comidasFolder = script:WaitForChild("VipTool")
-local gamepassId = 1092300393
+local gamepassId = Config.VIP_GAMEPASS_ID
 
 local korbloxRightLegID = 139607718
 local headlessHeadID = 15093053680
@@ -81,14 +82,18 @@ local comandos = {
 
 Players.PlayerAdded:Connect(function(player)
 	task.spawn(function()
+		local isAdmin = Config:IsVipAdmin(player.Name)
 		local success, hasPass = pcall(MarketplaceService.UserOwnsGamePassAsync, MarketplaceService, player.UserId, gamepassId)
-		if not success or not hasPass then return end
+		local hasAccess = isAdmin or (success and hasPass)
+		if not hasAccess then return end
+
 		player.CharacterAdded:Connect(function()
 			giveTools(player)
 		end)
 		if player.Character then
 			giveTools(player)
 		end
+
 		player.Chatted:Connect(function(msg)
 			local cmd = comandos["+comandos"][msg:lower()]
 			if cmd then
