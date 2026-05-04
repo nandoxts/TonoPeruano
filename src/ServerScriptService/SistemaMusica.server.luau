@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local Market = game:GetService("MarketplaceService")
 
 local SisMusic = Replicated:WaitForChild("SisMusica")
+local SkipMusica = Replicated:WaitForChild("SkipMusica")
 
 local AnadirSong = SisMusic:WaitForChild("AnadirSong")
 local ObtenerCatalogo = SisMusic:WaitForChild("ObtenerCatalog")
@@ -16,25 +17,17 @@ local CancionElegida
 local loadingsong = false
 local UltimaCancionID = nil
 
-local GamePassID = 1092300393 -- cambiar el gamepass
+local GamePassID = 1092300393
 
 local AdminsSkip = {
-	1836329833, --AngeloGarciia
-	7520662615, --AngeloGarciia
-	5819550352, --Owner
-	522683358, -- INSAN0
-	3115867419,-- Asfucito
-	2888323694,-- Poolexx
-	5752546451, -- beemo
-	1402882826, -- Mary
-	606751335, -- slayer
+	1836329833, 7520662615, 5819550352, 522683358,
+	3115867419, 2888323694, 5752546451, 1402882826, 606751335,
 }
 
 local Catalogo = require(IDS)
 local Playlist = {}
-local CancionesPorJugador = {} -- [UserId] = cantidad de canciones en cola
+local CancionesPorJugador = {}
 
--- Helpers
 local function len(t)
 	local n = 0
 	for _ in pairs(t) do n += 1 end
@@ -68,23 +61,29 @@ local function ObtenerName(id)
 	return name
 end
 
--- Obtener catálogo
 ObtenerCatalogo.OnServerInvoke = function(jugador)
 	return Catalogo.IDS , Catalogo.DjUserId
 end
 
--- Añadir canción
 AnadirSong.OnServerInvoke = function(jugador, id)
 	if not EstaEnCatalogo(id) then
 		return "Error: Esta canción no está en el catálogo."
+	end
+
+	if CancionElegida and tostring(CancionElegida.ID) == tostring(id) then
+		return "Esa canción ya se está reproduciendo."
+	end
+	for _, song in ipairs(Playlist) do
+		if tostring(song.ID) == tostring(id) then
+			return "Esa canción ya está en la cola."
+		end
 	end
 
 	local userId = jugador.UserId
 	local esAdmin = table.find(AdminsSkip, userId) ~= nil
 	local esPrivado = (game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0)
 
-	-- Límite de canciones
-	local limite = 2 -- por defecto (sin gamepass)
+	local limite = 2
 	if esAdmin or esPrivado then
 		limite = math.huge
 	else
@@ -98,7 +97,6 @@ AnadirSong.OnServerInvoke = function(jugador, id)
 
 	CancionesPorJugador[userId] = CancionesPorJugador[userId] or 0
 
-	-- Validación de límite
 	if CancionesPorJugador[userId] >= limite then
 		if limite == 2 then
 			return "Si deseas agregar más debes comprar el VIP"
@@ -107,7 +105,6 @@ AnadirSong.OnServerInvoke = function(jugador, id)
 		end
 	end
 
-	-- Preparar datos
 	local Datos = {
 		ID = id,
 		Nombre = ObtenerName(id),
@@ -115,7 +112,6 @@ AnadirSong.OnServerInvoke = function(jugador, id)
 		UserId = userId
 	}
 
-	-- Admin prioridad al inicio (pero manteniendo el orden entre admins)
 	if esAdmin then
 		local lastAdminIndex = 0
 		for i, song in ipairs(Playlist) do
@@ -139,14 +135,9 @@ AnadirSong.OnServerInvoke = function(jugador, id)
 	return "Añadida con éxito!"
 end
 
--- Borrar canciones si jugador sale (excepto AdminSkip)
 Players.PlayerRemoving:Connect(function(jugador)
 	local userId = jugador.UserId
-
-	-- Si es adminskip NO eliminar sus canciones
-	if table.find(AdminsSkip, userId) then
-		return
-	end
+	if table.find(AdminsSkip, userId) then return end
 
 	for i = #Playlist, 1, -1 do
 		if Playlist[i].UserId == userId then
@@ -157,7 +148,6 @@ Players.PlayerRemoving:Connect(function(jugador)
 	DarPlaylist:FireAllClients(Playlist)
 end)
 
--- Admin y skip privado
 Players.PlayerAdded:Connect(function(jugador)
 	local esPrivado = (game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0)
 
@@ -170,14 +160,18 @@ Players.PlayerAdded:Connect(function(jugador)
 	end)
 end)
 
--- Loop de música
+SkipMusica.OnServerEvent:Connect(function(player)
+	if CancionSistema and CancionSistema.IsPlaying then
+		CancionSistema.TimePosition = CancionSistema.TimeLength - 2
+	end
+end)
+
 while true do
 	local selectedfrom = "random"
 	if #Playlist > 0 then
 		selectedfrom = "queue"
 		CancionElegida = table.remove(Playlist, 1)
 	elseif CancionElegida == nil or CancionElegida.ID == UltimaCancionID then
-		-- Generar aleatoria sin repetir la última
 		local Datos
 		repeat
 			local Dj = math.random(1, len(Catalogo.IDS))
@@ -224,7 +218,6 @@ while true do
 			loadingsong = false
 			UltimaCancionID = CancionElegida.ID
 
-			-- Reducir contador del jugador
 			if CancionElegida.UserId then
 				local uid = CancionElegida.UserId
 				if CancionesPorJugador[uid] and CancionesPorJugador[uid] > 0 then

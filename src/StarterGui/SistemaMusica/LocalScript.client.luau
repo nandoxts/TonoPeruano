@@ -166,6 +166,32 @@ RS.RenderStepped:Connect(function()
 	visualpro.Size = Vector3.new(loud/10, loud/10, loud/10)
 end)
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local skipProductId = 3381342616 -- Tu ID de producto
+
+local SkipMusica = ReplicatedStorage:WaitForChild("SkipMusica")
+
+local skipButton = script.Parent:WaitForChild("Frame")
+	:WaitForChild("CustomId")
+	:WaitForChild("Frame")
+	:WaitForChild("Skip")
+
+-- Cuando hacen clic en el botón, se abre la compra
+skipButton.MouseButton1Click:Connect(function()
+	MarketplaceService:PromptProductPurchase(player, skipProductId)
+end)
+
+-- Detectar compra finalizada
+MarketplaceService.PromptProductPurchaseFinished:Connect(function(plr, productId, wasPurchased)
+	if wasPurchased and productId == skipProductId then
+		SkipMusica:FireServer() -- ✅ Avisar al servidor
+	end
+end)
+
 CIDButton.MouseButton1Click:Connect(function()
 	if CIDBox.Text ~= "" then
 		local id = tonumber(CIDBox.Text)

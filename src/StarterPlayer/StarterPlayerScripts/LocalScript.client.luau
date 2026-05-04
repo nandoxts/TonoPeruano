@@ -1,43 +1,42 @@
 local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 
-local function getCharacter()
-	return player.Character or player.CharacterAdded:Wait()
-end
+settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+camera.MaxZoomDistance = 60
+camera.FieldOfView = 70
 
-local function optimizarPartesEstaticas()
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("BasePart") and obj.Anchored then
-			obj.CanCollide = false
-			obj.CastShadow = false
-		end
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 500
+Lighting.Brightness = 1
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+
+for _, effect in ipairs(Lighting:GetChildren()) do
+	if effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") or effect:IsA("BloomEffect") or effect:IsA("ColorCorrectionEffect") then
+		effect.Enabled = false
 	end
 end
 
-local function ocultarPartesLejanas()
-	local character = getCharacter()
-	local hrp = character:WaitForChild("HumanoidRootPart")
-	local distanciaMax = 50
-
-	for _, parte in pairs(workspace:GetDescendants()) do
-		if parte:IsA("BasePart") and parte:FindFirstChild("Desactivable") then
-			local distancia = (parte.Position - hrp.Position).Magnitude
-			if distancia > distanciaMax then
-				parte.Transparency = 1
-				parte.CanCollide = false
-			else
-				parte.Transparency = 0
-				parte.CanCollide = true
-			end
-		end
+for _, obj in ipairs(workspace:GetDescendants()) do
+	if obj:IsA("Texture") or obj:IsA("Decal") then
+		obj.Transparency = 1
+	elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+		obj.Enabled = false
 	end
 end
 
--- ⏱️ Bucle de optimización (ligero)
-RunService.RenderStepped:Connect(function()
-	pcall(ocultarPartesLejanas)
+local fps = 60
+local counter = 0
+RunService.RenderStepped:Connect(function(dt)
+	counter += 1
+	if counter >= 10 then
+		fps = math.floor(1 / dt)
+		counter = 0
+	end
 end)
 
--- 🛠️ Ejecutar al inicio
-optimizarPartesEstaticas()
+print("Optimizador cargado")

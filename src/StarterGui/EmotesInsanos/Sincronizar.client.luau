@@ -4,20 +4,24 @@ local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local StarterGui = game:GetService("StarterGui")
+local SoundService = game:GetService("SoundService")
 
 --[[ REMOTES ]]--
 local Remotes = ReplicatedStorage:WaitForChild("RemotesSync")
 local syncremote = Remotes:WaitForChild("Sync")
+local HugEvents = ReplicatedStorage:WaitForChild("Events2"):WaitForChild("HugEvents")
+local HugAsk = ReplicatedStorage:WaitForChild("Events2"):WaitForChild("HugAsk")
 
 --[[ LOCALS ]]--
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
--- UI
+-- UI Elements
 local Syncronisar = script.Parent:WaitForChild("Syncronisar")
 local FrameInfo = Syncronisar:WaitForChild("Info")
 local Buttos = Syncronisar:WaitForChild("ScrollingFrame"):WaitForChild("Buttos")
 local Syncro = Buttos:WaitForChild("Sync")
+local Abrazo = Buttos:WaitForChild("Abrazo")
 local ImagenUser = FrameInfo:WaitForChild("ImagenUser")
 local NombreUserGod = FrameInfo:WaitForChild("Name")
 local Visualizacion = FrameInfo:WaitForChild("visualización")
@@ -27,9 +31,22 @@ local CerrarSync = Syncronisar:WaitForChild("Close")
 local Target = nil
 local debounce = false
 local panelAbierto = false
+local isHugging = false 
+
+local NotifySound = SoundService:FindFirstChild("MainSounds") and SoundService.MainSounds:FindFirstChild("Notify")
 
 local originalSize = Syncronisar.Size
 local originalPosition = Syncronisar.Position
+
+-- FUNCIONES --------------------------
+
+local function actualizarTextoAbrazo()
+	if isHugging then
+		Abrazo.Text = "Dejar de abrazar"
+	else
+		Abrazo.Text = "Abrazo"
+	end
+end
 
 local function AbrirPanel(jugador)
 	if not jugador then return end
@@ -67,6 +84,8 @@ local function AbrirPanel(jugador)
 	tween:Play()
 
 	panelAbierto = true
+
+	actualizarTextoAbrazo()
 end
 
 local function CerrarPanel()
@@ -82,32 +101,6 @@ local function CerrarPanel()
 	Target = nil
 end
 
--- Botón de sincronizar
-Syncro.MouseButton1Click:Connect(function()
-	if not Target or debounce then return end
-	debounce = true
-
-	if Player.Character:FindFirstChild("SyncOnOff") and Player.Character.SyncOnOff.Value then
-		syncremote:FireServer("unsync")
-		Syncro.Text = "Sincronizar"
-	else
-		syncremote:FireServer("sync", Target)
-		Syncro.Text = "Dejar de Sincronizar"
-	end
-
-	task.wait(0.5)
-	debounce = false
-end)
-
--- Botón cerrar panel
-CerrarSync.MouseButton1Click:Connect(function()
-	CerrarPanel()
-end)
-
--- Ocultar panel al inicio
-Syncronisar.Visible = false
-
--- Mostrar / ocultar panel al hacer clic sobre otro jugador
 Mouse.Button1Down:Connect(function()
 	local objetivo = Mouse.Target
 	if objetivo then
@@ -125,10 +118,10 @@ Mouse.Button1Down:Connect(function()
 	end
 end)
 
--- Cerrar panel si se hace clic fuera
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed or not panelAbierto then return end
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 		local mouseLocation = UserInputService:GetMouseLocation()
 		local guiInset = game:GetService("GuiService"):GetGuiInset()
 
@@ -148,7 +141,56 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 	end
 end)
 
--- Agregar ClickDetectors a partes del personaje
+CerrarSync.MouseButton1Click:Connect(function()
+	CerrarPanel()
+end)
+
+Syncro.MouseButton1Click:Connect(function()
+	if not Target or debounce then return end
+	debounce = true
+
+	if Player.Character:FindFirstChild("SyncOnOff") and Player.Character.SyncOnOff.Value then
+		syncremote:FireServer("unsync")
+		Syncro.Text = "Sincronizar"
+	else
+		syncremote:FireServer("sync", Target)
+		Syncro.Text = "Dejar de Sincronizar"
+	end
+
+	task.wait(0.5)
+	debounce = false
+end)
+
+local tiempoEsperaAbrazo = 4
+local ultimoEnvioAbrazo = 0
+
+Abrazo.MouseButton1Click:Connect(function()
+	if not Target then return end
+
+	local tiempoActual = tick()
+	local tiempoRestante = tiempoEsperaAbrazo - (tiempoActual - ultimoEnvioAbrazo)
+
+	if tiempoRestante > 0 and not isHugging then
+		StarterGui:SetCore("SendNotification", {
+			Title = "Espera...",
+			Text = string.format("Debes esperar %.1f segundos para volver a pedir un abrazo.", tiempoRestante),
+			Duration = 2,
+			Icon = "http://www.roblox.com/asset/?id=3944670656"
+		})
+		if NotifySound then NotifySound:Play() end
+		return
+	end
+
+	if isHugging then
+		HugEvents:FireServer("Stop", Player)
+	else
+		HugEvents:FireServer("Ask", Target)
+		ultimoEnvioAbrazo = tiempoActual
+	end
+end)
+
+Syncronisar.Visible = false
+
 local function agregarClickDetectorsAPartes(char)
 	for _, parte in ipairs(char:GetDescendants()) do
 		if parte:IsA("BasePart") and not parte:FindFirstChildOfClass("ClickDetector") then
@@ -160,7 +202,6 @@ local function agregarClickDetectorsAPartes(char)
 	end
 end
 
--- Cuando un jugador entra
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(char)
 		task.wait(1)
@@ -168,7 +209,6 @@ Players.PlayerAdded:Connect(function(player)
 	end)
 end)
 
--- Para los jugadores que ya están en el juego
 for _, player in ipairs(Players:GetPlayers()) do
 	if player ~= Player then
 		if player.Character then
@@ -180,3 +220,46 @@ for _, player in ipairs(Players:GetPlayers()) do
 		end)
 	end
 end
+
+HugAsk.OnClientEvent:Connect(function(fromPlayer)
+	local bindable = Instance.new("BindableFunction")
+
+	StarterGui:SetCore("SendNotification", {
+		Title = "Abrazo 🫂",
+		Text = fromPlayer.Name .. " quiere abrazarte",
+		Icon = "http://www.roblox.com/asset/?id=3944670656",
+		Duration = 5,
+		Button1 = "Aceptar",
+		Button2 = "Rechazar",
+		Callback = bindable
+	})
+
+	if NotifySound then NotifySound:Play() end
+
+	function bindable.OnInvoke(response)
+		if response == "Aceptar" then
+			HugEvents:FireServer("Hug", fromPlayer)
+		end
+	end
+end)
+
+HugEvents.OnClientEvent:Connect(function(enable)
+	local Controls = require(Player:WaitForChild("PlayerScripts"):WaitForChild("PlayerModule")):GetControls()
+	if enable == true then
+		Controls:Enable()
+		isHugging = false
+	else
+		Controls:Disable()
+		isHugging = true
+
+		StarterGui:SetCore("SendNotification", {
+			Title = "Notificacion",
+			Text = "Para dejar de abrazar al jugador, dale click y presiona el botón que dice 'Dejar de abrazar'.",
+			Duration = 10,
+			Icon = "http://www.roblox.com/asset/?id=3944670656"
+		})
+
+		if NotifySound then NotifySound:Play() end
+	end
+	actualizarTextoAbrazo()
+end)

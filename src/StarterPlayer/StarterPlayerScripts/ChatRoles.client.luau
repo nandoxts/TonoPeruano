@@ -6,7 +6,9 @@ local TextChatService = game:GetService("TextChatService")
 -- Lista de roles
 local creators = {
 	"xlm_brem",
-	"AngeloGarciia"
+	"AngeloGarciia",
+	"marcosyuik12",
+	"VALLEIDS"
 }
 
 local admins = {
@@ -15,7 +17,10 @@ local admins = {
 
 local verifiedUsers = {
 	"xlm_brem",
-	"AngeloGarciia"
+	"AngeloGarciia",
+	"VALLEIDS",
+	"marcosyuik159",
+	"shyshybuu_u"
 }
 
 -- Función para verificar si un jugador está en una lista
@@ -52,7 +57,7 @@ local function getChatTag(player)
 
 	-- Tag de Creador
 	if isInList(name, creators) then
-		table.insert(tags, { Tag = "Creador", Color = Color3.fromRGB(255, 217, 1) })
+		table.insert(tags, { Tag = "👑CREADOR👑", Color = Color3.fromRGB(255, 217, 1) })
 
 		-- Tag de Administrador
 	elseif isInList(name, admins) then

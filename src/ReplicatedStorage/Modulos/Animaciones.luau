@@ -1,6 +1,24 @@
 local Animaciones = {}
 
 Animaciones.Ids = {
+	{ID = 74498799892136, Nombre = 'Thriller'},
+	{ID = 100837352999512, Nombre = 'Smooth Criminal'},
+	{ID = 139957672285986, Nombre = 'Moon Walk'},
+	{ID = 122830472348236, Nombre = 'Lean'},
+	{ID = 130179674791973, Nombre = 'Billie Jean'},
+	{ID = 138316142522795, Nombre = 'Menea I'},
+	{ID = 93650537970037, Nombre = 'Menea II'},
+	{ID = 87026730190141, Nombre = 'Macarena'},
+	{ID = 129764254213842, Nombre = 'Gangnam Style'},
+	{ID = 109863843469159, Nombre = 'Zapateo I'},
+	{ID = 79209803496762, Nombre = 'Zapateo II'},
+	{ID = 95598009785895, Nombre = 'Ghosts Turros'},
+	{ID = 104764044091264, Nombre = 'Ghosts Takadance'},
+	{ID = 117717879866825, Nombre = 'Ghosts Garrote'},
+	{ID = 101011728520473, Nombre = 'Default Dance'},
+	{ID = 124982597491660, Nombre = 'California Girls'},
+	{ID = 133551169796944, Nombre = 'Salsa Sensual'},
+	{ID = 80443100846814, Nombre = 'Sexy Dance'},
 	{ID = 140264972855688, Nombre = 'Rock n Roll'},
 	{ID = 108060277268915, Nombre = 'Soul I'},
 	{ID = 99786006678146, Nombre = 'Soul II'},
@@ -108,7 +126,6 @@ Animaciones.Ids = {
 	{ID = 74595445883300, Nombre = 'Paseventou'},
 	{ID = 89703843633445, Nombre = 'Working Hard'},
 	{ID = 75354665537151, Nombre = 'Yo'},
-
 } 
 
 

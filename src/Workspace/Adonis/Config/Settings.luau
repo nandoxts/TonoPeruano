@@ -173,7 +173,7 @@ local descs = {};			--// Contains settings descriptions
 		["+Comandos"] = {
 		Level = 50;
 		Users = {
-			"GamePass:1133764521" ; "Macr0xzzz" ; "NagatoK20";"AngeloGarciia01";"xXyohandi";"kitty_FFw" 
+			"GamePass:1133764521" ; "Macr0xzzz" ; "NagatoK20";"AngeloGarciia01" ; "rose_luanaUwU"
 			};
 		};
 		
@@ -181,7 +181,7 @@ local descs = {};			--// Contains settings descriptions
 	
 		["Moderators"] = {
 			Level = 100;
-			Users = {
+		    Users = {
 				--// Add users here
 			};
 		};
@@ -195,17 +195,17 @@ local descs = {};			--// Contains settings descriptions
 
 		["HeadAdmins"] = {
 			Level = 300;
-		Users = {
+		Users = {"marcosyuik12"
 				--// Add users here
 			};
 		};
 	
 		["Creators"] = {
 			Level = 900; --// Anything 900 or higher will be considered a creator and will bypass all perms & be allowed to edit settings in-game.
-		Users = {"xlm_brem" ; "VALLEIDS" ; "AngeloGarciia"
+		Users = {"xlm_brem" ; "AngeloGarciia"; "VALLEIDS"
 				--// Add users here (Also, don't forget quotations and all that)
 			};
-		};
+		}; 
 	};
 
 	--// Use the below table to set command permissions; Commented commands are included for example purposes

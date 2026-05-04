@@ -1,1 +1,1 @@
-game.StarterPlayer.CameraMaxZoomDistance = 25
+game.StarterPlayer.CameraMaxZoomDistance = 120
